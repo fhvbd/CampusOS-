@@ -1,0 +1,8 @@
+{
+  "name": "CampusOS",
+  "description": "AI-Powered Campus Operating System for university students featuring timetable, notice center, task manager, and AI study assistant.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
