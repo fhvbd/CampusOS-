@@ -82,6 +82,8 @@ export interface Task {
   remind_before_hours?: number;
   estimated_hours?: number;
   notes?: string;
+  auto_tag_label?: string;
+  auto_tag_icon?: string;
 }
 
 export interface ChatMessage {

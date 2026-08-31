@@ -50,29 +50,29 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
   const days = [1, 2, 3, 4, 5, 6, 7];
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-8 sm:space-y-10 pb-16">
       
-      {/* 1. Header Controls & Week Selector */}
-      <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* 1. Header Controls & Week Selector (Liquid Glass Container) */}
+      <div className="glass-panel rounded-3xl p-6 sm:p-7 space-y-5 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
           
           {/* Week Selector */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200">
+          <div className="flex flex-wrap items-center gap-3.5">
+            <div className="flex items-center glass-pill rounded-2xl p-1 shadow-2xs">
               <button
                 id="schedule-prev-week"
                 onClick={() => setSelectedWeek(Math.max(1, selectedWeek - 1))}
                 disabled={selectedWeek <= 1}
-                className="p-1.5 rounded-lg hover:bg-white text-slate-600 disabled:opacity-30 cursor-pointer transition-all"
+                className="p-2 rounded-xl hover:bg-white/80 text-slate-700 disabled:opacity-30 cursor-pointer transition-all active:scale-95"
                 title="上一周"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
               
-              <div className="px-3 py-1 text-sm font-extrabold text-slate-900 min-w-24 text-center">
+              <div className="px-4 py-1 text-sm font-black text-slate-900 min-w-32 text-center">
                 第 {selectedWeek} 周
                 {selectedWeek === settings.current_week && (
-                  <span className="ml-1 text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full">
+                  <span className="ml-1.5 text-[10px] font-black text-blue-700 bg-blue-500/15 border border-blue-500/25 px-2 py-0.5 rounded-full">
                     本周
                   </span>
                 )}
@@ -82,7 +82,7 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
                 id="schedule-next-week"
                 onClick={() => setSelectedWeek(Math.min(20, selectedWeek + 1))}
                 disabled={selectedWeek >= 20}
-                className="p-1.5 rounded-lg hover:bg-white text-slate-600 disabled:opacity-30 cursor-pointer transition-all"
+                className="p-2 rounded-xl hover:bg-white/80 text-slate-700 disabled:opacity-30 cursor-pointer transition-all active:scale-95"
                 title="下一周"
               >
                 <ChevronRight className="h-4 w-4" />
@@ -91,24 +91,24 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
 
             <button
               onClick={() => setSelectedWeek(settings.current_week)}
-              className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold hover:bg-blue-100 transition-colors cursor-pointer"
+              className="px-3.5 py-2 rounded-2xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 text-xs font-bold border border-blue-500/20 transition-all cursor-pointer backdrop-blur-xs active:scale-95"
             >
               回到本周
             </button>
 
-            <span className="hidden sm:inline text-xs text-slate-400 font-medium">
+            <span className="hidden sm:inline text-xs text-slate-500 font-semibold ml-1">
               共 {weekCourses.length} 门课程 · {totalCredits.toFixed(1)} 学分
             </span>
           </div>
 
           {/* View Mode Switcher & Add Course */}
-          <div className="flex items-center gap-2.5">
-            <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-semibold">
+          <div className="flex items-center gap-3">
+            <div className="flex glass-pill p-1 rounded-2xl text-xs font-bold shadow-2xs">
               <button
                 id="schedule-view-week"
                 onClick={() => setViewMode('week')}
-                className={`px-3 py-1.5 rounded-lg cursor-pointer transition-all ${
-                  viewMode === 'week' ? 'bg-white text-blue-700 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'
+                className={`px-4 py-2 rounded-xl cursor-pointer transition-all ${
+                  viewMode === 'week' ? 'bg-linear-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25 font-black border border-white/30' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 周课表
@@ -116,8 +116,8 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
               <button
                 id="schedule-view-day"
                 onClick={() => setViewMode('day')}
-                className={`px-3 py-1.5 rounded-lg cursor-pointer transition-all ${
-                  viewMode === 'day' ? 'bg-white text-blue-700 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'
+                className={`px-4 py-2 rounded-xl cursor-pointer transition-all ${
+                  viewMode === 'day' ? 'bg-linear-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25 font-black border border-white/30' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 日视图
@@ -125,8 +125,8 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
               <button
                 id="schedule-view-exam"
                 onClick={() => setViewMode('exam')}
-                className={`px-3 py-1.5 rounded-lg cursor-pointer transition-all ${
-                  viewMode === 'exam' ? 'bg-white text-rose-700 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'
+                className={`px-4 py-2 rounded-xl cursor-pointer transition-all ${
+                  viewMode === 'exam' ? 'bg-linear-to-r from-rose-600 to-pink-600 text-white shadow-md shadow-rose-500/25 font-black border border-white/30' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 考试安排 ({examCourses.length})
@@ -136,9 +136,9 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
             <button
               id="schedule-add-course"
               onClick={onOpenAddCourse}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0"
+              className="flex items-center gap-2 px-4.5 py-2.5 rounded-2xl bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-black shadow-md shadow-blue-500/25 border border-white/30 transition-all cursor-pointer shrink-0 active:scale-95"
             >
-              <Plus className="h-3.5 w-3.5" />
+              <Plus className="h-4 w-4" />
               <span>添加课程</span>
             </button>
           </div>
@@ -146,15 +146,15 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
         </div>
       </div>
 
-      {/* 2. Main Timetable Matrix View */}
+      {/* 2. Main Timetable Matrix View (Liquid Frosted Glass Grid) */}
       {viewMode === 'week' && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+        <div className="glass-panel rounded-3xl shadow-md overflow-hidden">
           <div className="overflow-x-auto">
             <div className="min-w-[800px]">
               
               {/* Day Headers (Mon - Sun) */}
-              <div className="grid grid-cols-8 border-b border-slate-200 bg-slate-50/80 text-xs font-bold text-slate-700">
-                <div className="p-3 text-center text-slate-400 font-semibold border-r border-slate-200">
+              <div className="grid grid-cols-8 border-b border-white/70 bg-white/50 backdrop-blur-md text-xs font-extrabold text-slate-700">
+                <div className="p-3.5 text-center text-slate-400 font-bold border-r border-white/60">
                   节次 / 时间
                 </div>
                 {days.map(dayIndex => {
@@ -162,13 +162,15 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
                   return (
                     <div
                       key={dayIndex}
-                      className={`p-3 text-center border-r border-slate-200 last:border-r-0 ${
-                        isToday ? 'bg-blue-50/80 text-blue-700 font-extrabold' : ''
+                      className={`p-3.5 text-center border-r border-white/60 last:border-r-0 ${
+                        isToday ? 'bg-blue-500/15 text-blue-700 font-black' : ''
                       }`}
                     >
-                      <div>{getDayName(dayIndex)}</div>
+                      <div className="tracking-wide">{getDayName(dayIndex)}</div>
                       {isToday && (
-                        <div className="text-[10px] text-blue-600 font-medium">今日</div>
+                        <div className="text-[10px] text-blue-700 font-black mt-0.5 bg-blue-500/20 px-2 py-0.2 rounded-full inline-block">
+                          今日
+                        </div>
                       )}
                     </div>
                   );
@@ -176,18 +178,18 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
               </div>
 
               {/* Grid Body: 10 Periods */}
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-white/60">
                 {PERIOD_TIMES.map(periodInfo => {
                   const period = periodInfo.period;
                   return (
-                    <div key={period} className="grid grid-cols-8 min-h-[72px]">
+                    <div key={period} className="grid grid-cols-8 min-h-[76px]">
                       
                       {/* Period Label Col */}
-                      <div className="p-2 border-r border-slate-200 bg-slate-50/40 text-center flex flex-col justify-center">
-                        <span className="text-xs font-extrabold text-slate-800">
+                      <div className="p-2 border-r border-white/60 bg-white/30 backdrop-blur-xs text-center flex flex-col justify-center">
+                        <span className="text-xs font-black text-slate-800">
                           {period}
                         </span>
-                        <span className="text-[10px] text-slate-400 font-mono">
+                        <span className="text-[10px] text-slate-400 font-mono font-medium">
                           {periodInfo.start}
                         </span>
                       </div>
@@ -218,19 +220,19 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
                               key={dayIndex}
                               onClick={() => onSelectCourse(courseStartingHere)}
                               style={{ gridRow: `span ${courseStartingHere.period_count}` }}
-                              className={`m-1 p-2.5 rounded-xl border transition-all cursor-pointer hover:shadow-md hover:scale-[1.01] flex flex-col justify-between ${colorConfig.lightBg}`}
+                              className={`m-1.5 p-3 rounded-2xl border transition-all cursor-pointer hover:shadow-lg hover:scale-[1.02] active:scale-98 flex flex-col justify-between backdrop-blur-md ${colorConfig.lightBg} shadow-xs`}
                             >
-                              <div className="space-y-1">
-                                <div className="text-xs font-bold leading-tight line-clamp-2">
+                              <div className="space-y-1.5">
+                                <div className="text-xs font-black leading-tight line-clamp-2 drop-shadow-2xs">
                                   {courseStartingHere.course_name}
                                 </div>
-                                <div className="text-[11px] opacity-85 flex items-center gap-1 font-medium">
+                                <div className="text-[11px] opacity-90 flex items-center gap-1 font-bold">
                                   <MapPin className="h-3 w-3 shrink-0" />
                                   <span className="truncate">{courseStartingHere.classroom}</span>
                                 </div>
                               </div>
 
-                              <div className="mt-1 pt-1 border-t border-black/5 text-[10px] opacity-75 flex items-center justify-between">
+                              <div className="mt-2 pt-1.5 border-t border-black/5 text-[10px] font-bold opacity-80 flex items-center justify-between">
                                 <span>{courseStartingHere.teacher}</span>
                                 <span>{courseStartingHere.credits}学分</span>
                               </div>
@@ -241,7 +243,7 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
                         return (
                           <div
                             key={dayIndex}
-                            className="p-1 border-r border-slate-100 last:border-r-0 hover:bg-blue-50/20 transition-colors"
+                            className="p-1 border-r border-white/50 last:border-r-0 hover:bg-blue-500/10 transition-colors"
                           />
                         );
                       })}
@@ -258,16 +260,16 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
 
       {/* 3. Day View Mode */}
       {viewMode === 'day' && (
-        <div className="space-y-4">
-          <div className="flex gap-2 overflow-x-auto pb-2">
+        <div className="space-y-6">
+          <div className="flex gap-2.5 overflow-x-auto pb-2">
             {days.map(day => (
               <button
                 key={day}
                 onClick={() => setSelectedDay(day)}
-                className={`px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer transition-all shrink-0 ${
+                className={`px-5 py-3 rounded-2xl text-xs font-bold cursor-pointer transition-all shrink-0 ${
                   selectedDay === day
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+                    ? 'bg-linear-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25 border border-white/30'
+                    : 'glass-panel text-slate-700 hover:bg-white/90'
                 }`}
               >
                 {getFullDayName(day)}
@@ -275,9 +277,9 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
             ))}
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             {weekCourses.filter(c => c.day_of_week === selectedDay).length === 0 ? (
-              <div className="bg-white rounded-xl p-8 border border-slate-200 text-center text-slate-400 text-xs">
+              <div className="glass-panel rounded-3xl p-12 text-center text-slate-400 text-xs font-medium">
                 {getFullDayName(selectedDay)} 没有安排课程 🌴
               </div>
             ) : (
@@ -290,32 +292,32 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
                     <div
                       key={course.id}
                       onClick={() => onSelectCourse(course)}
-                      className="bg-white rounded-xl p-5 border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer flex items-center justify-between gap-4"
+                      className="glass-panel-interactive rounded-3xl p-6 cursor-pointer flex items-center justify-between gap-5"
                     >
-                      <div className="flex items-center gap-4">
-                        <div className={`h-14 w-14 rounded-xl flex flex-col items-center justify-center font-bold shrink-0 ${colorConfig.badge}`}>
-                          <span className="text-sm font-extrabold">{course.start_period}-{course.start_period + course.period_count - 1}</span>
-                          <span className="text-[10px] opacity-75">节</span>
+                      <div className="flex items-center gap-5">
+                        <div className={`h-16 w-16 rounded-2xl flex flex-col items-center justify-center font-bold shrink-0 shadow-xs border border-white/60 backdrop-blur-md ${colorConfig.badge}`}>
+                          <span className="text-base font-black">{course.start_period}-{course.start_period + course.period_count - 1}</span>
+                          <span className="text-[10px] opacity-80 font-bold">节</span>
                         </div>
-                        <div>
-                          <h3 className="font-bold text-base text-slate-900">{course.course_name}</h3>
-                          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 mt-1">
-                            <span className="flex items-center gap-1">
+                        <div className="space-y-1.5">
+                          <h3 className="font-black text-base sm:text-lg text-slate-900">{course.course_name}</h3>
+                          <div className="flex flex-wrap items-center gap-3.5 text-xs text-slate-600">
+                            <span className="flex items-center gap-1 font-mono font-medium">
                               <Clock className="h-3.5 w-3.5 text-slate-400" />
                               {course.start_time} - {course.end_time}
                             </span>
-                            <span className="flex items-center gap-1 font-semibold text-slate-700">
+                            <span className="flex items-center gap-1 font-bold text-slate-800 bg-rose-50/90 px-2.5 py-0.5 rounded-lg border border-rose-100">
                               <MapPin className="h-3.5 w-3.5 text-rose-500" />
                               {course.classroom}
                             </span>
-                            <span className="flex items-center gap-1">
+                            <span className="flex items-center gap-1 font-medium">
                               <User className="h-3.5 w-3.5 text-slate-400" />
                               {course.teacher}
                             </span>
                           </div>
                         </div>
                       </div>
-                      <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg shrink-0">
+                      <span className="text-xs font-black text-blue-600 bg-blue-500/10 border border-blue-500/20 px-4 py-2 rounded-xl shrink-0 backdrop-blur-xs shadow-2xs">
                         查看详情
                       </span>
                     </div>
@@ -328,44 +330,44 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
 
       {/* 4. Exam Schedule View */}
       {viewMode === 'exam' && (
-        <div className="space-y-4">
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3 text-xs text-amber-800">
-            <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
-            <span>
+        <div className="space-y-6">
+          <div className="glass-panel bg-amber-500/10 border-amber-500/25 rounded-3xl p-5 sm:p-6 flex items-center gap-4 text-xs text-amber-900 backdrop-blur-md">
+            <AlertCircle className="h-6 w-6 text-amber-600 shrink-0" />
+            <span className="font-medium leading-relaxed">
               期末考试安排已与教务处 CAS 综合教务系统实时同步，请携带有效身份证件与学生证提前15分钟到达考场。
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
             {examCourses.map(course => (
               <div
                 key={course.id}
                 onClick={() => onSelectCourse(course)}
-                className="bg-white rounded-xl p-5 border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer space-y-3"
+                className="glass-panel-interactive rounded-3xl p-6 cursor-pointer space-y-4 shadow-sm"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200">
+                  <span className="text-xs font-black px-3 py-1 rounded-full bg-rose-500/15 text-rose-700 border border-rose-500/25">
                     期末考试
                   </span>
-                  <span className="text-xs font-mono font-bold text-slate-700">
+                  <span className="text-xs font-mono font-bold text-slate-700 bg-slate-100/90 px-2.5 py-1 rounded-lg">
                     {course.credits} 学分
                   </span>
                 </div>
 
-                <h3 className="font-bold text-base text-slate-900">{course.course_name}</h3>
+                <h3 className="font-black text-lg text-slate-900">{course.course_name}</h3>
 
-                <div className="space-y-1.5 text-xs text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                <div className="space-y-2.5 text-xs text-slate-700 bg-white/60 p-4 rounded-2xl border border-white/80">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-400">考试日期：</span>
-                    <span className="font-semibold text-slate-800 font-mono">{course.exam_date}</span>
+                    <span className="text-slate-400 font-medium">考试日期：</span>
+                    <span className="font-bold text-slate-800 font-mono">{course.exam_date}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-400">考试时间：</span>
-                    <span className="font-semibold text-slate-800 font-mono">{course.exam_time}</span>
+                    <span className="text-slate-400 font-medium">考试时间：</span>
+                    <span className="font-bold text-slate-800 font-mono">{course.exam_time}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-400">考场及座次：</span>
-                    <span className="font-semibold text-blue-700 font-medium">{course.exam_location}</span>
+                    <span className="text-slate-400 font-medium">考场及座次：</span>
+                    <span className="font-bold text-blue-700">{course.exam_location}</span>
                   </div>
                 </div>
               </div>
@@ -374,24 +376,24 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
         </div>
       )}
 
-      {/* 5. AI Study Plan Generator Banner */}
-      <div className="rounded-xl bg-linear-to-r from-purple-50 to-indigo-50 border border-purple-200/70 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="h-10 w-10 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold shadow-xs shrink-0">
-            <Sparkles className="h-5 w-5" />
+      {/* 5. AI Study Plan Generator Banner (Liquid Glass Holographic with Breathing Room) */}
+      <div className="glass-panel rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6 border border-purple-300/60 bg-linear-to-r from-purple-500/10 via-indigo-500/10 to-blue-500/10 shadow-md shadow-purple-500/5">
+        <div className="flex items-center gap-4 sm:gap-5">
+          <div className="h-14 w-14 rounded-2xl bg-linear-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center font-bold shadow-md shadow-purple-500/25 border border-white/30 shrink-0">
+            <Sparkles className="h-7 w-7" />
           </div>
           <div>
-            <h4 className="font-bold text-sm text-slate-900">智能课表空闲分析与复习规划</h4>
-            <p className="text-xs text-slate-600 mt-0.5">
+            <h4 className="font-black text-base text-slate-900">智能课表空闲分析与复习规划</h4>
+            <p className="text-xs text-slate-600 mt-1 leading-relaxed font-medium">
               根据您的周课表空档（如周二下午、周四上午），由 AI 自动生成最优备考自习计划。
             </p>
           </div>
         </div>
         <button
           onClick={onAskAIForStudyPlan}
-          className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition-all cursor-pointer shrink-0 shadow-2xs flex items-center gap-1.5"
+          className="px-6 py-3 rounded-2xl bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-xs font-black transition-all cursor-pointer shrink-0 shadow-md shadow-purple-500/25 border border-white/30 flex items-center gap-2 active:scale-95"
         >
-          <Sparkles className="h-3.5 w-3.5" />
+          <Sparkles className="h-4 w-4 text-amber-300" />
           <span>一键生成学习作息</span>
         </button>
       </div>

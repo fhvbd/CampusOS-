@@ -214,6 +214,139 @@ export const CampusAPI = {
     saveStorage(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS);
   },
 
+  // Import and Merge JSON Data
+  importAndMergeData: async (backupData: any): Promise<{
+    user: UserProfile;
+    settings: AppSettings;
+    courses: Course[];
+    tasks: Task[];
+    notices: Notice[];
+    stats: {
+      addedCourses: number;
+      updatedCourses: number;
+      addedTasks: number;
+      updatedTasks: number;
+      addedNotices: number;
+      updatedNotices: number;
+    };
+  }> => {
+    // 1. Current data
+    const currentUser = loadStorage<UserProfile>(STORAGE_KEYS.USER, INITIAL_USER);
+    const currentCourses = loadStorage<Course[]>(STORAGE_KEYS.COURSES, INITIAL_COURSES);
+    const currentNotices = loadStorage<Notice[]>(STORAGE_KEYS.NOTICES, INITIAL_NOTICES);
+    const currentTasks = loadStorage<Task[]>(STORAGE_KEYS.TASKS, INITIAL_TASKS);
+    const currentSettings = loadStorage<AppSettings>(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS);
+
+    // 2. User & Settings Merge
+    const mergedUser: UserProfile = backupData.user
+      ? { ...currentUser, ...backupData.user }
+      : currentUser;
+    const mergedSettings: AppSettings = backupData.settings
+      ? { ...currentSettings, ...backupData.settings }
+      : currentSettings;
+
+    // 3. Courses Merge
+    let addedCourses = 0;
+    let updatedCourses = 0;
+    const courseMap = new Map<string, Course>();
+    currentCourses.forEach(c => courseMap.set(c.id, c));
+
+    if (Array.isArray(backupData.courses)) {
+      backupData.courses.forEach((c: Course) => {
+        if (c && c.id) {
+          if (courseMap.has(c.id)) {
+            updatedCourses++;
+          } else {
+            addedCourses++;
+          }
+          courseMap.set(c.id, { ...courseMap.get(c.id), ...c });
+        }
+      });
+    }
+    const mergedCourses = Array.from(courseMap.values());
+
+    // 4. Tasks Merge
+    let addedTasks = 0;
+    let updatedTasks = 0;
+    const taskMap = new Map<string, Task>();
+    currentTasks.forEach(t => taskMap.set(t.id, t));
+
+    if (Array.isArray(backupData.tasks)) {
+      backupData.tasks.forEach((t: Task) => {
+        if (t && t.id) {
+          if (taskMap.has(t.id)) {
+            updatedTasks++;
+          } else {
+            addedTasks++;
+          }
+          taskMap.set(t.id, { ...taskMap.get(t.id), ...t });
+        }
+      });
+    }
+    const mergedTasks = Array.from(taskMap.values());
+
+    // 5. Notices Merge
+    let addedNotices = 0;
+    let updatedNotices = 0;
+    const noticeMap = new Map<string, Notice>();
+    currentNotices.forEach(n => noticeMap.set(n.id, n));
+
+    if (Array.isArray(backupData.notices)) {
+      backupData.notices.forEach((n: Notice) => {
+        if (n && n.id) {
+          if (noticeMap.has(n.id)) {
+            updatedNotices++;
+          } else {
+            addedNotices++;
+          }
+          noticeMap.set(n.id, { ...noticeMap.get(n.id), ...n });
+        }
+      });
+    }
+    const mergedNotices = Array.from(noticeMap.values());
+
+    // 6. Save to LocalStorage
+    saveStorage(STORAGE_KEYS.USER, mergedUser);
+    saveStorage(STORAGE_KEYS.SETTINGS, mergedSettings);
+    saveStorage(STORAGE_KEYS.COURSES, mergedCourses);
+    saveStorage(STORAGE_KEYS.TASKS, mergedTasks);
+    saveStorage(STORAGE_KEYS.NOTICES, mergedNotices);
+
+    // 7. Sync online endpoints silently if possible
+    try {
+      if (backupData.user) {
+        await fetch('/api/user/profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(mergedUser),
+        });
+      }
+      if (backupData.settings) {
+        await fetch('/api/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(mergedSettings),
+        });
+      }
+    } catch (e) {}
+
+    return {
+      user: mergedUser,
+      settings: mergedSettings,
+      courses: mergedCourses,
+      tasks: mergedTasks,
+      notices: mergedNotices,
+      stats: {
+        addedCourses,
+        updatedCourses,
+        addedTasks,
+        updatedTasks,
+        addedNotices,
+        updatedNotices,
+      },
+    };
+  },
+
   // AI Chat and Tool Request
   sendAIChat: async (message: string, context?: any): Promise<{ reply: string; suggested_actions?: string[] }> => {
     try {

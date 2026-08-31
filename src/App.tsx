@@ -19,8 +19,11 @@ import { CourseModal } from './components/CourseModal';
 import { NoticeDetailModal } from './components/NoticeDetailModal';
 import { TaskModal } from './components/TaskModal';
 import { SearchModal } from './components/SearchModal';
+import { CommandPalette } from './components/CommandPalette';
+import { PwaModal } from './components/PwaModal';
 import { CheckCircle2 } from 'lucide-react';
 import { INITIAL_USER, INITIAL_COURSES, INITIAL_NOTICES, INITIAL_TASKS, INITIAL_SETTINGS } from './mockData';
+import { detectTaskAutoTag } from './lib/taskTags';
 
 export function App() {
   const [currentTab, setCurrentTab] = useState<TabType>('home');
@@ -41,6 +44,9 @@ export function App() {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isPwaModalOpen, setIsPwaModalOpen] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any | null>(null);
 
   // Toast Notification state
   const [toastMessage, setToastMessage] = useState<{ text: string; type?: 'success' | 'info' } | null>(null);
@@ -49,6 +55,16 @@ export function App() {
     setToastMessage({ text, type });
     setTimeout(() => setToastMessage(null), 3000);
   };
+
+  // Listen for browser PWA beforeinstallprompt event
+  useEffect(() => {
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+  }, []);
 
   // Initial Load from API / Storage
   useEffect(() => {
@@ -69,12 +85,15 @@ export function App() {
     loadData();
   }, []);
 
-  // Keyboard shortcut Ctrl+K for search
+  // Keyboard shortcut Ctrl+K for search, Ctrl+P for Command Palette
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setIsSearchModalOpen(prev => !prev);
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        setIsCommandPaletteOpen(prev => !prev);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -115,19 +134,41 @@ export function App() {
   };
 
   const handleConvertNoticeToTask = async (notice: Notice) => {
+    const title = `【待办】${notice.title.slice(0, 30)}`;
+    const initialCategory = notice.category === 'academic' ? 'homework' : 'campus';
+    const autoTag = detectTaskAutoTag(title, initialCategory);
+
     const newTask: Task = {
       id: `t_${Date.now()}`,
-      title: `【待办】${notice.title.slice(0, 30)}`,
+      title,
       description: `来自通知《${notice.title}》：\n${notice.summary}`,
-      category: notice.category === 'academic' ? 'homework' : 'campus',
+      category: autoTag.category || initialCategory,
       priority: notice.is_urgent ? 'high' : 'medium',
       deadline: notice.deadline || '2026-09-10 18:00',
       is_completed: false,
       created_at: new Date().toISOString().split('T')[0],
+      auto_tag_label: autoTag.label,
+      auto_tag_icon: autoTag.iconName,
     };
     const updated = await CampusAPI.saveTask(newTask);
     setTasks(updated);
     showToast(`已将《${notice.title.slice(0, 15)}...》截止事项加入待办清单！`);
+  };
+
+  const handlePromptInstall = async () => {
+    if (deferredPrompt) {
+      try {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          showToast('感谢安装 CampusOS！已添加到系统桌面');
+          setDeferredPrompt(null);
+          setIsPwaModalOpen(false);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
   };
 
   const handleToggleTask = async (taskId: string) => {
@@ -146,14 +187,19 @@ export function App() {
   };
 
   const handleAddTaskFromAI = async (title: string, deadline?: string) => {
+    const finalTitle = `【AI定制】${title}`;
+    const autoTag = detectTaskAutoTag(finalTitle, 'personal');
+
     const newTask: Task = {
       id: `t_${Date.now()}`,
-      title: `【AI定制】${title}`,
-      category: 'personal',
+      title: finalTitle,
+      category: autoTag.category || 'personal',
       priority: 'high',
       deadline: deadline || `${new Date().toISOString().split('T')[0]} 22:00`,
       is_completed: false,
       created_at: new Date().toISOString().split('T')[0],
+      auto_tag_label: autoTag.label,
+      auto_tag_icon: autoTag.iconName,
     };
     const updated = await CampusAPI.saveTask(newTask);
     setTasks(updated);
@@ -182,12 +228,62 @@ export function App() {
     showToast('已恢复为官方初始演示数据集');
   };
 
+  const handleImportData = async (backupData: any) => {
+    const res = await CampusAPI.importAndMergeData(backupData);
+    setUser(res.user);
+    setSettings(res.settings);
+    setCourses(res.courses);
+    setTasks(res.tasks);
+    setNotices(res.notices);
+    showToast('本地配置数据已成功解析并合并！');
+    return res;
+  };
+
+  const handleExportBackupDirectly = () => {
+    const backup = {
+      version: '1.0.0',
+      exported_at: new Date().toISOString(),
+      user,
+      settings,
+      courses,
+      tasks,
+      notices,
+      stats: {
+        total_courses: courses.length,
+        total_tasks: tasks.length,
+        total_notices: notices.length,
+      }
+    };
+    const jsonString = JSON.stringify(backup, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const fileName = `CampusOS_Backup_${user.student_id}_${new Date().toISOString().split('T')[0]}.json`;
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(`已成功导出 ${courses.length} 门课程、${tasks.length} 项待办至 ${fileName}`);
+  };
+
   const unreadNoticeCount = notices.filter(n => !n.is_read).length;
   const pendingTaskCount = tasks.filter(t => !t.is_completed).length;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col selection:bg-blue-100 selection:text-blue-900 font-sans">
+    <div className="relative min-h-screen bg-slate-100/80 text-slate-900 flex flex-col selection:bg-blue-500/20 selection:text-blue-900 font-sans overflow-x-hidden">
       
+      {/* Background Liquid Ambient Mesh Glow Orbs */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        {/* Orb 1: Indigo-Blue Top Left */}
+        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-linear-to-br from-blue-400/30 via-indigo-400/25 to-transparent blur-3xl animate-orb-1" />
+        {/* Orb 2: Violet-Purple Center Right */}
+        <div className="absolute top-1/4 -right-24 w-[32rem] h-[32rem] rounded-full bg-linear-to-bl from-purple-400/25 via-indigo-300/20 to-transparent blur-3xl animate-orb-2" />
+        {/* Orb 3: Cyan-Teal Bottom Left */}
+        <div className="absolute bottom-12 -left-20 w-[28rem] h-[28rem] rounded-full bg-linear-to-tr from-cyan-400/20 via-sky-300/20 to-transparent blur-3xl animate-orb-3" />
+        {/* Orb 4: Rose-Pink Bottom Center */}
+        <div className="absolute -bottom-20 right-1/3 w-80 h-80 rounded-full bg-linear-to-t from-rose-300/15 via-purple-300/15 to-transparent blur-3xl" />
+      </div>
+
       {/* Top Header */}
       <Header
         user={user}
@@ -196,6 +292,8 @@ export function App() {
         pendingTaskCount={pendingTaskCount}
         onRefreshSync={handleRefreshSync}
         onOpenSearch={() => setIsSearchModalOpen(true)}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+        onOpenPwaModal={() => setIsPwaModalOpen(true)}
         onOpenProfile={() => setCurrentTab('profile')}
         onOpenNotice={() => setCurrentTab('notice')}
       />
@@ -208,8 +306,8 @@ export function App() {
         pendingTaskCount={pendingTaskCount}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Main Content Area - Generous Breathing Room */}
+      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
         {currentTab === 'home' && (
           <HomeTab
             user={user}
@@ -283,9 +381,14 @@ export function App() {
           <ProfileTab
             user={user}
             settings={settings}
+            courses={courses}
+            tasks={tasks}
+            notices={notices}
             onUpdateUser={handleUpdateUser}
             onUpdateSettings={handleUpdateSettings}
             onResetData={handleResetData}
+            onImportData={handleImportData}
+            onOpenPwaModal={() => setIsPwaModalOpen(true)}
           />
         )}
       </main>
@@ -335,9 +438,50 @@ export function App() {
         }}
       />
 
-      {/* Toast Alert Banner */}
+      {/* Global Command Palette (Ctrl+P / Cmd+P) */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onNavigateTab={tab => setCurrentTab(tab)}
+        onOpenNewTask={() => {
+          setSelectedTask(null);
+          setIsTaskModalOpen(true);
+        }}
+        onOpenNewCourse={() => {
+          setSelectedCourse(null);
+          setIsCourseModalOpen(true);
+        }}
+        onOpenSearch={() => setIsSearchModalOpen(true)}
+        onOpenPwaModal={() => setIsPwaModalOpen(true)}
+        onRefreshSync={handleRefreshSync}
+        onExportBackup={handleExportBackupDirectly}
+        onOpenImport={() => {
+          setCurrentTab('profile');
+          setTimeout(() => {
+            const btn = document.getElementById('profile-import-data-btn');
+            if (btn) btn.click();
+          }, 300);
+        }}
+        onResetData={handleResetData}
+        onTriggerAIPrompt={prompt => {
+          setCurrentTab('ai');
+        }}
+      />
+
+      {/* PWA Immersion & Desktop Installation Modal */}
+      <PwaModal
+        isOpen={isPwaModalOpen}
+        onClose={() => setIsPwaModalOpen(false)}
+        user={user}
+        settings={settings}
+        deferredPrompt={deferredPrompt}
+        onPromptInstall={handlePromptInstall}
+        onShowToast={showToast}
+      />
+
+      {/* Toast Alert Banner (Liquid Glass) */}
       {toastMessage && (
-        <div className="fixed bottom-16 md:bottom-6 right-4 sm:right-6 z-50 bg-slate-900 text-white text-xs font-semibold px-4 py-3 rounded-2xl shadow-xl border border-slate-700 flex items-center gap-2.5">
+        <div className="fixed bottom-16 md:bottom-6 right-4 sm:right-6 z-50 glass-dark text-white text-xs font-semibold px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 border border-white/20 backdrop-blur-xl animate-in fade-in slide-in-from-bottom-3 duration-300">
           <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
           <span>{toastMessage.text}</span>
         </div>
